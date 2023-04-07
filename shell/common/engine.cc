@@ -408,6 +408,10 @@ void Engine::HandleSettingsPlatformMessage(PlatformMessage* message) {
   }
 }
 
+void Engine::SetInitialKeyboardState(std::vector<int64_t> keys) {
+  runtime_controller_->SetInitialKeyboardState(std::move(keys));
+}
+
 void Engine::DispatchPointerDataPacket(
     std::unique_ptr<PointerDataPacket> packet,
     uint64_t trace_flow_id) {
@@ -545,6 +549,7 @@ const std::string& Engine::GetLastEntrypointLibrary() const {
 const std::vector<std::string>& Engine::GetLastEntrypointArgs() const {
   return last_entry_point_args_;
 }
+
 
 // |RuntimeDelegate|
 void Engine::RequestDartDeferredLibrary(intptr_t loading_unit_id) {

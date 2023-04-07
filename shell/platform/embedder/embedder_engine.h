@@ -53,6 +53,8 @@ class EmbedderEngine {
   bool DispatchPointerDataPacket(
       std::unique_ptr<flutter::PointerDataPacket> packet);
 
+  bool SetInitialKeyboardState(const std::vector<int64_t>& keys);
+
   bool SendPlatformMessage(std::unique_ptr<PlatformMessage> message);
 
   bool RegisterTexture(int64_t texture);

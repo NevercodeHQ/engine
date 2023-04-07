@@ -50,4 +50,8 @@ public class KeyChannelResponder implements KeyboardManager.Responder {
         isKeyUp,
         (isEventHandled) -> onKeyEventHandledCallback.onKeyEventHandled(isEventHandled));
   }
+
+  @Override
+  public void onPreEngineRestart() {
+  };
 }

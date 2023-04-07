@@ -292,6 +292,35 @@ class RuntimeController : public PlatformConfigurationClient {
   bool ReportTimings(std::vector<int64_t> timings);
 
   //----------------------------------------------------------------------------
+  /// @brief      Dart code cannot fully measure the time it takes for a
+  ///             specific frame to be rendered. This is because Dart code only
+  ///             runs on the UI task runner. That is only a small part of the
+  ///             overall frame workload. The raster task runner frame workload
+  ///             is executed on a thread where Dart code cannot run (and hence
+  ///             instrument). Besides, due to the pipelined nature of rendering
+  ///             in Flutter, there may be multiple frame workloads being
+  ///             processed at any given time. However, for non-Timeline based
+  ///             profiling, it is useful for trace collection and processing to
+  ///             happen in Dart. To do this, the raster task runner frame
+  ///             workloads need to be instrumented separately. After a set
+  ///             number of these profiles have been gathered, they need to be
+  ///             reported back to Dart code. The engine reports this extra
+  ///             instrumentation information back to the framework by invoking
+  ///             this method at predefined intervals.
+  ///
+  /// @see        `FrameTiming`
+  ///
+  /// @param[in]  keys  Collection of `FrameTiming::kStatisticsCount` * 'n'
+  ///                      values for `n` frames whose timings have not been
+  ///                      reported yet. Many of the values are timestamps, but
+  ///                      a collection of integers is reported here for easier
+  ///                      conversions to Dart objects. The timestamps are
+  ///                      measured against the system monotonic clock measured
+  ///                      in microseconds.
+  ///
+  bool SetInitialKeyboardState(const std::vector<int64_t> keys);
+
+  //----------------------------------------------------------------------------
   /// @brief      Notify the Dart VM that no frame workloads are expected on the
   ///             UI task runner till the specified deadline. The VM uses this
   ///             opportunity to perform garbage collection operations is a

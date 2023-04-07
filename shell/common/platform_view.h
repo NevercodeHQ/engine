@@ -140,6 +140,18 @@ class PlatformView {
 
     //--------------------------------------------------------------------------
     /// @brief      Notifies the delegate that the platform view has encountered
+    ///             a pointer event. This pointer event needs to be forwarded to
+    ///             the running root isolate hosted by the engine on the UI
+    ///             thread.
+    ///
+    /// @param[in]  packet  The pointer data packet containing multiple pointer
+    ///                     events.
+    ///
+    virtual void OnPlatformViewSetInitialKeyboardState(
+        const std::vector<int64_t>& keys) = 0;
+
+    //--------------------------------------------------------------------------
+    /// @brief      Notifies the delegate that the platform view has encountered
     ///             an accessibility related action on the specified node. This
     ///             event must be forwarded to the running root isolate hosted
     ///             by the engine on the UI thread.
@@ -604,6 +616,9 @@ class PlatformView {
   /// @param[in]  packet  The pointer data packet to dispatch to the framework.
   ///
   void DispatchPointerDataPacket(std::unique_ptr<PointerDataPacket> packet);
+
+
+  void SetInitialKeyboardState(const std::vector<int64_t>& keys);
 
   //--------------------------------------------------------------------------
   /// @brief      Used by the embedder to specify a texture that it wants the

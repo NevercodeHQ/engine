@@ -716,6 +716,9 @@ class Engine final : public RuntimeDelegate, PointerDataDispatcher::Delegate {
   void DispatchPointerDataPacket(std::unique_ptr<PointerDataPacket> packet,
                                  uint64_t trace_flow_id);
 
+  ///
+  void SetInitialKeyboardState(std::vector<int64_t> keys);
+
   //----------------------------------------------------------------------------
   /// @brief      Notifies the engine that the embedder encountered an
   ///             accessibility related action on the specified node. This call

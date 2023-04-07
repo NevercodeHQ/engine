@@ -340,6 +340,19 @@ static void SetViewportMetrics(JNIEnv* env,
   ANDROID_SHELL_HOLDER->GetPlatformView()->SetViewportMetrics(metrics);
 }
 
+static void SetInitialKeyboardState(JNIEnv* env,
+                                    jobject jcaller,
+                                    jlong shell_holder,
+                                    jlongArray javaKeys) {
+  // Convert java->c++
+  jsize keysSize = env->GetArrayLength(javaKeys);
+  std::vector<int64_t> keysVector(keysSize);
+  env->GetLongArrayRegion(javaKeys, 0, keysSize,
+                         &keysVector[0]);
+
+  ANDROID_SHELL_HOLDER->GetPlatformView()->SetInitialKeyboardState(keysVector);
+}
+
 static jobject GetBitmap(JNIEnv* env, jobject jcaller, jlong shell_holder) {
   auto screenshot = ANDROID_SHELL_HOLDER->Screenshot(
       Rasterizer::ScreenshotType::UncompressedImage, false);
@@ -705,6 +718,11 @@ bool RegisterApi(JNIEnv* env) {
           .name = "nativeDispatchPointerDataPacket",
           .signature = "(JLjava/nio/ByteBuffer;I)V",
           .fnPtr = reinterpret_cast<void*>(&DispatchPointerDataPacket),
+      },
+      {
+          .name = "nativeSetInitialKeyboardState",
+          .signature = "(J[J)V",
+          .fnPtr = reinterpret_cast<void*>(&SetInitialKeyboardState),
       },
       {
           .name = "nativeDispatchSemanticsAction",

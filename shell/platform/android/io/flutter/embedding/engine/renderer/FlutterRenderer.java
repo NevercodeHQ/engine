@@ -519,6 +519,10 @@ public class FlutterRenderer implements TextureRegistry {
     flutterJNI.dispatchSemanticsAction(nodeId, action, args, argsPosition);
   }
 
+  public void setInitialKeyboardState(long[] keys) {
+    flutterJNI.setInitialKeyboardState(keys);
+  }
+
   /**
    * Mutable data structure that holds all viewport metrics properties that Flutter cares about.
    *

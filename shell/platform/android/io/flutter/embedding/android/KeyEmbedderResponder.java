@@ -12,6 +12,7 @@ import io.flutter.embedding.android.KeyboardMap.TogglingGoal;
 import io.flutter.plugin.common.BinaryMessenger;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A {@link KeyboardManager.Responder} of {@link KeyboardManager} that handles events by sending
@@ -48,12 +49,18 @@ public class KeyEmbedderResponder implements KeyboardManager.Responder {
   // states in their `enabled` field.
   @NonNull private final HashMap<Long, TogglingGoal> togglingGoals = new HashMap<>();
 
+  @NonNull private final KeyboardManager.ViewDelegate viewDelegate;
+
   @NonNull
   private final KeyboardManager.CharacterCombiner characterCombiner =
       new KeyboardManager.CharacterCombiner();
 
-  public KeyEmbedderResponder(BinaryMessenger messenger) {
+  // This will be true until the framework handled a first key event.
+  private boolean shouldUpdateInitialPressingState = true;
+
+  public KeyEmbedderResponder(BinaryMessenger messenger, @NonNull KeyboardManager.ViewDelegate viewDelegate) {
     this.messenger = messenger;
+    this.viewDelegate = viewDelegate;
     for (final TogglingGoal goal : KeyboardMap.getTogglingGoals()) {
       togglingGoals.put(goal.logicalKey, goal);
     }
@@ -111,6 +118,18 @@ public class KeyEmbedderResponder implements KeyboardManager.Responder {
       if (previousValue == null) {
         throw new AssertionError("The key was empty");
       }
+    }
+  }
+
+  void sendInitialPressingStateIfNeeded() {
+    if (shouldUpdateInitialPressingState) {
+      final long[] keys = new long[pressingRecords.size() * 2];
+      int index = 0;
+      for (Map.Entry<Long, Long> entry : pressingRecords.entrySet()) {
+        keys[index++] = entry.getKey();
+        keys[index++] = entry.getValue();
+      }
+      this.viewDelegate.setInitialKeyboardState(keys);
     }
   }
 
@@ -338,6 +357,8 @@ public class KeyEmbedderResponder implements KeyboardManager.Responder {
       }
     }
 
+    this.sendInitialPressingStateIfNeeded();
+
     final KeyData output = new KeyData();
     output.timestamp = event.getEventTime();
     output.type = type;
@@ -373,9 +394,15 @@ public class KeyEmbedderResponder implements KeyboardManager.Responder {
             ? null
             : message -> {
               Boolean handled = false;
-              message.rewind();
-              if (message.capacity() != 0) {
-                handled = message.get() != 0;
+              if (message != null) {
+                message.rewind();
+                if (message.capacity() != 0) {
+                  handled = message.get() != 0;
+                }
+                // Check if this is the first answer from the framework.
+                if (shouldUpdateInitialPressingState) {
+                  shouldUpdateInitialPressingState = false;
+                };
               }
               onKeyEventHandledCallback.onKeyEventHandled(handled);
             };
@@ -405,4 +432,9 @@ public class KeyEmbedderResponder implements KeyboardManager.Responder {
       onKeyEventHandledCallback.onKeyEventHandled(true);
     }
   }
+
+  @Override
+  public void onPreEngineRestart() {
+    this.shouldUpdateInitialPressingState = true;
+  };
 }

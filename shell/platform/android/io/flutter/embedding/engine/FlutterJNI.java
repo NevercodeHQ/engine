@@ -735,6 +735,18 @@ public class FlutterJNI {
       long nativeShellHolderId, @NonNull ByteBuffer buffer, int position);
   // ------ End Touch Interaction Support ---
 
+  // ------ Start Keyboard pressed state Support ---
+  /** Sends keyboard pressed keys to the engine. */
+  @UiThread
+  public void setInitialKeyboardState(long[] keys) {
+    ensureRunningOnMainThread();
+    ensureAttachedToNative();
+    nativeSetInitialKeyboardState(nativeShellHolderId, keys);
+  }
+
+  private native void nativeSetInitialKeyboardState(long nativeShellHolderId, long[] keys);
+  // ------ End Keyboard pressed state Support ---
+
   @UiThread
   public void setPlatformViewsController(@NonNull PlatformViewsController platformViewsController) {
     ensureRunningOnMainThread();

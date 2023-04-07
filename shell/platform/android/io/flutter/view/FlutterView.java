@@ -847,6 +847,11 @@ public class FlutterView extends SurfaceView
     getRootView().dispatchKeyEvent(keyEvent);
   }
 
+  @Override
+  public void setInitialKeyboardState(long[] keys) {
+    mNativeView.getFlutterJNI().setInitialKeyboardState(keys);
+  }
+
   // -------- End: Keyboard -------
 
   @Override

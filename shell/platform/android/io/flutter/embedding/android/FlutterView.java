@@ -53,6 +53,7 @@ import androidx.window.layout.WindowInfoTracker;
 import androidx.window.layout.WindowLayoutInfo;
 import io.flutter.Log;
 import io.flutter.embedding.engine.FlutterEngine;
+import io.flutter.embedding.engine.FlutterEngine.EngineLifecycleListener;
 import io.flutter.embedding.engine.renderer.FlutterRenderer;
 import io.flutter.embedding.engine.renderer.FlutterRenderer.DisplayFeatureState;
 import io.flutter.embedding.engine.renderer.FlutterRenderer.DisplayFeatureType;
@@ -1112,6 +1113,11 @@ public class FlutterView extends FrameLayout
     getRootView().dispatchKeyEvent(keyEvent);
   }
 
+  @Override
+  public void setInitialKeyboardState(long[] keys) {
+    flutterEngine.getRenderer().setInitialKeyboardState(keys);
+  }
+
   // -------- End: Keyboard -------
 
   /**
@@ -1175,6 +1181,19 @@ public class FlutterView extends FrameLayout
     localizationPlugin = this.flutterEngine.getLocalizationPlugin();
 
     keyboardManager = new KeyboardManager(this);
+    this.flutterEngine.addEngineLifecycleListener(
+      new EngineLifecycleListener() {
+        @SuppressWarnings("unused")
+        public void onPreEngineRestart() {
+          keyboardManager.onPreEngineRestart();
+        }
+
+        @Override
+        public void onEngineWillDestroy() {
+        }
+      }
+    );
+
     androidTouchProcessor =
         new AndroidTouchProcessor(this.flutterEngine.getRenderer(), /*trackMotionEvents=*/ false);
     accessibilityBridge =

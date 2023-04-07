@@ -10,9 +10,12 @@ import androidx.annotation.NonNull;
 import io.flutter.Log;
 import io.flutter.embedding.engine.systemchannels.KeyEventChannel;
 import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.BasicMessageChannel;
 import io.flutter.plugin.editing.InputConnectionAdaptor;
 import io.flutter.plugin.editing.TextInputPlugin;
 import java.util.HashSet;
+import java.nio.ByteBuffer;
+import java.io.UnsupportedEncodingException;
 
 /**
  * Processes keyboard events and cooperate with {@link TextInputPlugin}.
@@ -114,11 +117,32 @@ public class KeyboardManager implements InputConnectionAdaptor.KeyboardDelegate 
    */
   public KeyboardManager(@NonNull ViewDelegate viewDelegate) {
     this.viewDelegate = viewDelegate;
+    this.resizeChannelBuffer(viewDelegate.getBinaryMessenger(), "flutter/keydata", 0);
+    this.resizeChannelBuffer(viewDelegate.getBinaryMessenger(), "flutter/keyevent", 0);
     this.responders =
         new Responder[] {
-          new KeyEmbedderResponder(viewDelegate.getBinaryMessenger()),
+          new KeyEmbedderResponder(viewDelegate.getBinaryMessenger(), viewDelegate),
           new KeyChannelResponder(new KeyEventChannel(viewDelegate.getBinaryMessenger())),
         };
+  }
+
+  public void onPreEngineRestart() {
+    for (final Responder primaryResponder : responders) {
+      primaryResponder.onPreEngineRestart();
+    }
+  }
+
+  public void resizeChannelBuffer(
+      @NonNull BinaryMessenger messenger, @NonNull String channel, int newSize) {
+    try {
+      final String content = String.format("resize\r%s\r%d", channel, newSize);
+      final byte[] bytes = content.getBytes("UTF-8");
+      ByteBuffer packet = ByteBuffer.allocateDirect(bytes.length);
+      packet.put(bytes);
+      messenger.send(BasicMessageChannel.CHANNEL_BUFFERS_CHANNEL, packet);
+    } catch (UnsupportedEncodingException e) {
+      throw new AssertionError("UTF-8 not supported");
+    }
   }
 
   /**
@@ -151,6 +175,11 @@ public class KeyboardManager implements InputConnectionAdaptor.KeyboardDelegate 
      */
     void handleEvent(
         @NonNull KeyEvent keyEvent, @NonNull OnKeyEventHandledCallback onKeyEventHandledCallback);
+
+    /**
+     * Informs this {@link Responder} that the engine is restarted.
+     */
+    void onPreEngineRestart();
   }
 
   /**
@@ -173,6 +202,8 @@ public class KeyboardManager implements InputConnectionAdaptor.KeyboardDelegate 
 
     /** Send a {@link KeyEvent} that is not handled by Flutter back to the platform. */
     public void redispatch(@NonNull KeyEvent keyEvent);
+
+    public void setInitialKeyboardState(long[] keys);
   }
 
   private class PerEventCallbackBuilder {
