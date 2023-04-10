@@ -3082,6 +3082,7 @@ FlutterEngineResult FlutterEngineGetProcAddresses(
   SET_PROC(SendWindowMetricsEvent, FlutterEngineSendWindowMetricsEvent);
   SET_PROC(SendPointerEvent, FlutterEngineSendPointerEvent);
   SET_PROC(SendKeyEvent, FlutterEngineSendKeyEvent);
+  
   SET_PROC(SendPlatformMessage, FlutterEngineSendPlatformMessage);
   SET_PROC(PlatformMessageCreateResponseHandle,
            FlutterPlatformMessageCreateResponseHandle);
